@@ -55,22 +55,22 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
             return null;
         return [match1 + match2, match1.substring(1, match1.length - 1), match2.substring(1, match2.length - 1)];
     }
-    return function(text) {
+    return function(text, enableNewlines, enableColours) {
         if (!text) return text;
         var out = "";
         while (text != "") {
             var match;
             if ((match = text.match(/^(http|https):\/\/\S+/)) != null) {
-                out += "<a href=\"" + escapeQuote(match[0]) + "\">" + escapeHtml(match[0]) + "</a>";
+                out += "<a href=\"" + escapeQuote(match[0]) + "\" target=\"_blank\">" + escapeHtml(match[0]) + "</a>";
                 text = text.substring(match[0].length);
             } else if ((match = matchMDUrl(text)) != null) {
-                out += "<a href=\"" + escapeQuote(match[2]) + "\">" + escapeHtml(match[1]) + "</a>";
+                out += "<a href=\"" + escapeQuote(match[2]) + "\" target=\"_blank\">" + escapeHtml(match[1]) + "</a>";
                 text = text.substring(match[0].length);
             } else if ((match = text.match(/^```.*?```/)) != null) {
                 out += "<code>" + escapeHtml(match[0].substring(3, match[0].length - 3)) + "</code>";
                 text = text.substring(match[0].length);
             } else if ((match = text.match(/^\\(.)/)) != null) {
-                if (match[1] == 'n') {
+                if (enableNewlines && match[1] == 'n') {
                     out += "<br/>";
                 } else {
                     out += escapeHtml(match[0]);
@@ -85,18 +85,21 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
 
                 color = color.match(/rgb\((\d+), (\d+), (\d+)\)/);
                 color = [parseInt(color[1]), parseInt(color[2]), parseInt(color[3])];
-
-                if (match[2] != null) {
-                    var amount = Math.min(255 / Math.max(Math.max(color[0], color[1]), color[2]), 2);
-                    var color2 = [color[0] * amount, color[1] * amount, color[2] * amount];
-                    var styleElt = document.createElement("style");
-                    styleElt.textContent = "@keyframes flashStyle" + flashStyleId + " { from { color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + "); }" +
-                        "to { color: rgb(" + color2[0] + ", " + color2[1] + ", " + color2[2] + "); }}";
-                    document.body.appendChild(styleElt);
-                    out += "<span style=\"animation: flashStyle" + flashStyleId + " .01s ease-in-out infinite alternate\">" + escapeHtml(match[3]) + "</span>";
-                    flashStyleId += 1;
+                if (enableColours) {
+                    if (match[2] != null) {
+                        var amount = Math.min(255 / Math.max(Math.max(color[0], color[1]), color[2]), 2);
+                        var color2 = [color[0] * amount, color[1] * amount, color[2] * amount];
+                        var styleElt = document.createElement("style");
+                        styleElt.textContent = "@keyframes flashStyle" + flashStyleId + " { from { color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + "); }" +
+                            "to { color: rgb(" + color2[0] + ", " + color2[1] + ", " + color2[2] + "); }}";
+                        document.body.appendChild(styleElt);
+                        out += "<span style=\"animation: flashStyle" + flashStyleId + " .01s ease-in-out infinite alternate\">" + escapeHtml(match[3]) + "</span>";
+                        flashStyleId += 1;
+                    } else {
+                        out += "<span style=\"color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")\">" + escapeHtml(match[3]) + "</span>";
+                    }
                 } else {
-                    out += "<span style=\"color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")\">" + escapeHtml(match[3]) + "</span>";
+                    out += escapeHtml(match[3]);
                 }
                 text = text.substring(match[0].length);
             } else if ((match = text.match(isSmilieRegex)) != null) {
