@@ -64,7 +64,7 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
             return null;
         return [match1 + match2, match1.substring(1, match1.length - 1), match2.substring(1, match2.length - 1)];
     }
-    return function(text, enableNewlines, enableColours) {
+    function formatText(text, enableNewlines, enableColours) {
         if (!text) return text;
         var out = "";
         while (text != "") {
@@ -85,7 +85,7 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
                     out += escapeHtml(match[0]);
                 }
                 text = text.substring(match[0].length);
-            } else if ((match = text.match(/^<color\s+([#0-9a-zA-Z]*)\s*(\s+flash)?>(.*?)<\/color>/)) != null) {
+            } else if ((match = text.match(/^<color\s+([#0-9a-zA-Z]*)\s*(?:(\sflash)\s*)?>(.*?)<\/color>/)) != null) {
                 var tmp = document.createElement("span");
                 tmp.setAttribute("style", "color: " + match[1] + "; display: none");
                 document.body.appendChild(tmp);
@@ -102,13 +102,17 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
                         styleElt.textContent = "@keyframes flashStyle" + flashStyleId + " { from { color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + "); }" +
                             "to { color: rgb(" + color2[0] + ", " + color2[1] + ", " + color2[2] + "); }}";
                         document.body.appendChild(styleElt);
-                        out += "<span style=\"animation: flashStyle" + flashStyleId + " .01s ease-in-out infinite alternate\">" + escapeHtml(match[3]) + "</span>";
+                        out += "<span style=\"animation: flashStyle" + flashStyleId + " .01s ease-in-out infinite alternate\">" + formatText(match[3], enableNewlines, enableColours) + "</span>";
                         flashStyleId += 1;
                     } else {
-                        out += "<span style=\"color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")\">" + escapeHtml(match[3]) + "</span>";
+                        out += "<span style=\"color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")\">" + formatText(match[3], enableNewlines, enableColours) + "</span>";
                     }
                 } else {
-                    out += escapeHtml(match[3]);
+                    var flash = match[2];
+                    if (flash == null) {
+                        flash = "";
+                    }
+                    out += "&lt;color rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")" + flash + "&gt;" + formatText(match[3], enableNewlines, enableColours) + "&lt;/color&gt;";
                 }
                 text = text.substring(match[0].length);
             } else if ((match = text.match(isSmilieRegex)) != null) {
@@ -121,7 +125,8 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
             }
         }
         return out;
-    };
+    }
+    return formatText;
 }]);
 
 weechat.filter('toArray', function () {
