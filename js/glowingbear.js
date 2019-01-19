@@ -63,6 +63,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         'customCSS': '',
         "currentlyViewedBuffers":{},
         "enableNewlines": true,
+        "enableMdLinks": true,
         "enableColours": false,
     });
     $scope.settings = settings;
