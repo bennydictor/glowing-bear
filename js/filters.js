@@ -64,7 +64,7 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
             return null;
         return [match1 + match2, match1.substring(1, match1.length - 1), match2.substring(1, match2.length - 1)];
     }
-    function formatText(text, settings) {
+    function formatText(text, enableNewlines, enableMdLinks, enableColours) {
         if (!text) return text;
         var out = "";
         while (text != "") {
@@ -73,7 +73,7 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
                 out += "<a href=\"" + escapeQuote(match[0]) + "\" target=\"_blank\">" + escapeHtml(match[0]) + "</a>";
                 text = text.substring(match[0].length);
             } else if ((match = matchMDUrl(text)) != null) {
-                if (settings.enableMdLinks) {
+                if (enableMdLinks) {
                     out += "<a href=\"" + escapeQuote(match[2]) + "\" target=\"_blank\">" + escapeHtml(match[1]) + "</a>";
                 } else {
                     out += "[" + escapeHtml(match[1]) + "](<a href=\"" + escapeQuote(match[2]) + "\" target=\"_blank\">" + escapeHtml(match[2]) + "</a>)";
@@ -83,7 +83,7 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
                 out += "<code>" + escapeHtml(match[0].substring(3, match[0].length - 3)) + "</code>";
                 text = text.substring(match[0].length);
             } else if ((match = text.match(/^\\(.)/)) != null) {
-                if (settings.enableNewlines && match[1] == 'n') {
+                if (enableNewlines && match[1] == 'n') {
                     out += "<br/>";
                 } else {
                     out += escapeHtml(match[0]);
@@ -98,7 +98,7 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
 
                 color = color.match(/rgb\((\d+), (\d+), (\d+)\)/);
                 color = [parseInt(color[1]), parseInt(color[2]), parseInt(color[3])];
-                if (settings.enableColours) {
+                if (enableColours) {
                     if (match[2] != null) {
                         var amount = Math.min(255 / Math.max(Math.max(color[0], color[1]), color[2]), 2);
                         var color2 = [color[0] * amount, color[1] * amount, color[2] * amount];
@@ -106,10 +106,10 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
                         styleElt.textContent = "@keyframes flashStyle" + flashStyleId + " { from { color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + "); }" +
                             "to { color: rgb(" + color2[0] + ", " + color2[1] + ", " + color2[2] + "); }}";
                         document.body.appendChild(styleElt);
-                        out += "<span style=\"animation: flashStyle" + flashStyleId + " .01s ease-in-out infinite alternate\">" + formatText(match[3], settings) + "</span>";
+                        out += "<span style=\"animation: flashStyle" + flashStyleId + " .01s ease-in-out infinite alternate\">" + formatText(match[3], enableNewlines, enableMdLinks, enableColours) + "</span>";
                         flashStyleId += 1;
                     } else {
-                        out += "<span style=\"color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")\">" + formatText(match[3], settings) + "</span>";
+                        out += "<span style=\"color: rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")\">" + formatText(match[3], enableNewlines, enableMdLinks, enableColours) + "</span>";
                     }
                 } else {
                     var flash = match[2];
