@@ -116,7 +116,7 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
                     if (flash == null) {
                         flash = "";
                     }
-                    out += "&lt;colour rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")" + flash + "&gt;" + formatText(match[3], settings) + "&lt;/colour&gt;";
+                    out += "&lt;colour rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")" + flash + "&gt;" + formatText(match[3], enableNewlines, enableMdLinks, enableColours) + "&lt;/colour&gt;";
                 }
                 text = text.substring(match[0].length);
             } else if ((match = text.match(isSmilieRegex)) != null) {
