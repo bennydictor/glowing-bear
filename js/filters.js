@@ -86,7 +86,7 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
                 if (enableNewlines && match[1] == 'n') {
                     out += "<br/>";
                 } else {
-                    out += escapeHtml(match[0]);
+                    out += escapeHtml(match[1]);
                 }
                 text = text.substring(match[0].length);
             } else if ((match = text.match(/^<colou?r\s+([#0-9a-zA-Z]*)\s*(?:(\sflash)\s*)?>(.*?)<\/colou?r>/)) != null) {
