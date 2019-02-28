@@ -46,7 +46,7 @@ weechat.directive('inputBar', function() {
                         continue;
                     }
                     // emojify segment
-                    var emojified = emojione.shortnameToUnicode(segments[i]);
+                    var emojified = segments[i]; //emojione.shortnameToUnicode(segments[i]);
                     if (emojiRegex.test(emojified)) {
                         // If result consists *only* of emoji, adjust caret
                         // position and replace segment with emojified version
