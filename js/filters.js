@@ -82,7 +82,7 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
             } else if ((match = text.match(/^```.*?```/)) != null) {
                 out += "<code>" + escapeHtml(match[0].substring(3, match[0].length - 3)) + "</code>";
                 text = text.substring(match[0].length);
-            } else if ((match = text.match(/^\\(.)/)) != null) {
+            } else if ((match = text.match(/^\\([:n])/)) != null) {
                 if (enableNewlines && match[1] == 'n') {
                     out += "<br/>";
                 } else {
