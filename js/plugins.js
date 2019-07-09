@@ -491,7 +491,7 @@ plugins.factory('userPlugins', function() {
         var match = url.match(regexp);
         if (match) {
             var id = match[1],
-                embedurl = "https://ghostbiniframe.bennydictor.tk/paste/" + id,
+                embedurl = "https://ghostbiniframe.bennydict.org/paste/" + id,
                 element = angular.element('<iframe></iframe>')
                                  .attr('src', embedurl)
                                  .attr('width', '100%')
