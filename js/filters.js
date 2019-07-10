@@ -7,19 +7,17 @@ var flashStyleId = 0;
 
 var smiliesIndex = {};
 
-var isSmilieRegex = []
-var specialSmilies = []
+var isSmilieRegex = [];
+var specialSmilies = [];
 for (var i in smiliesIndex) {
-    i = i.replace(/\(/g, "\\(").replace(/\)/g, "\\)").replace(/\*/g, "\\*").replace(/\[/g, "\\[").replace(/\]/g, "\\]").replace(/\?/g, "\\?");
+    i = i.replace(/[()*\[\]?]/g, m => "\\" + m);
     if (i.match(/^:.*:$/)) {
         isSmilieRegex.push(i);
     } else {
         specialSmilies.push(i);
     }
 }
-
-isSmilieRegex = "^(" + isSmilieRegex.join("|") + "|" + specialSmilies.join("|") + ")";
-isSmilieRegex = new RegExp(isSmilieRegex);
+isSmilieRegex = new RegExp("^(" + isSmilieRegex.join("|") + "|" + specialSmilies.join("|") + ")");
 
 weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
     function escapeHtml(text) {
@@ -29,39 +27,39 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
         return text.replace(/"/g, "&quot;");
     }
     function matchBBS(text, openBracket, closeBracket) {
-        if (text[0] == openBracket) {
-            var balance = 1;
-            var i;
-            for (i = 1; i < text.length; ++i) {
-                if (text[i] == openBracket) {
-                    balance += 1;
-                } else if (text[i] == closeBracket) {
-                    balance -= 1;
-                }
-                if (balance == 0) {
-                    break;
-                }
-            }
-            if (balance == 0) {
-                return text.substring(0, i+1);
-            } else {
-                return null;
-            }
-        } else {
+        if (text[0] != openBracket) {
             return null;
         }
+        var balance = 1;
+        var i;
+        for (i = 1; i < text.length; ++i) {
+            if (text[i] == openBracket) {
+                balance += 1;
+            } else if (text[i] == closeBracket) {
+                balance -= 1;
+            }
+            if (balance == 0) {
+                break;
+            }
+        }
+        if (balance != 0) {
+            return null;
+        }
+        return text.substring(0, i+1);
     }
     function matchMDUrl(text) {
         var match1 = matchBBS(text, "[", "]");
-        if (match1 == null)
+        if (match1 == null) {
             return null;
+        }
         text = text.substring(match1.length);
         var match2 = matchBBS(text, "(", ")");
-        if (match2 == null)
+        if (match2 == null) {
             return null;
+        }
         return [match1 + match2, match1.substring(1, match1.length - 1), match2.substring(1, match2.length - 1)];
     }
-    function formatText(text, enableNewlines, enableMdLinks, enableColours, enableEmojis) {
+    function formatText(text, enableNewlines, enableMdLinks, enableColours) {
         if (!text) return text;
         var out = "";
         while (text != "") {
@@ -76,12 +74,13 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
                     out += "[" + escapeHtml(match[1]) + "](<a href=\"" + escapeQuote(match[2]) + "\" target=\"_blank\">" + escapeHtml(match[2]) + "</a>)";
                 }
                 text = text.substring(match[0].length);
-            } else if ((match = text.match(/^```.*?```/)) != null) {
-                out += "<code>" + escapeHtml(match[0].substring(3, match[0].length - 3)) + "</code>";
-                text = text.substring(match[0].length);
-            } else if ((match = text.match(/^\\([:n])/)) != null) {
-                if (enableNewlines && match[1] == 'n') {
-                    out += "<br/>";
+            } else if ((match = text.match(/^\\(.)/)) != null) {
+                if (match[1] == 'n') {
+                    if (enableNewlines) {
+                        out += "<br/>";
+                    } else {
+                        out += escapeHtml(match[0]);
+                    }
                 } else {
                     out += escapeHtml(match[1]);
                 }
@@ -118,11 +117,12 @@ weechat.filter('bennyLinky', ["$sanitize", function($sanitize) {
                 text = text.substring(match[0].length);
             } else if ((match = text.match(isSmilieRegex)) != null) {
                 var smilie = smiliesIndex[match[0]];
-                out += "<img src=\"" + smilie.url + "\" title=\"" + match[0] + " " + smilie.title + "\"/>";
+                var addTitle = smilie.title;
+                if (addTitle != "") {
+                    addTitle = " " + addTitle;
+                }
+                out += "<img src=\"" + smilie.url + "\" title=\"" + match[0] + addTitle + "\"/>";
                 text = text.substring(match[0].length);
-            } else if (enableEmojis && (match = text.match(/^(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c[\ude32-\ude3a]|[\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])/)) != null) {
-                out += "&#xfffd;";
-                text = text.substring(1);
             } else {
                 out += escapeHtml(text[0]);
                 text = text.substring(1);
